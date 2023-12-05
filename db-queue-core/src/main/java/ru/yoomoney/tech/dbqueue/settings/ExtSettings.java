@@ -3,6 +3,7 @@ package ru.yoomoney.tech.dbqueue.settings;
 import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -118,13 +119,18 @@ public class ExtSettings extends DynamicSetting<ExtSettings> {
      * A builder for ext settings.
      */
     public static class Builder {
-        private Map<String, String> extSettings;
+        private Map<String, String> extSettings = new LinkedHashMap<>();
 
         private Builder() {
         }
 
+        public Builder withSetting(@Nonnull String key, String value) {
+            extSettings.put(Objects.requireNonNull(key), value);
+            return this;
+        }
+
         public Builder withSettings(@Nonnull Map<String, String> extSettings) {
-            this.extSettings = extSettings;
+            this.extSettings = new LinkedHashMap<>(extSettings);
             return this;
         }
 

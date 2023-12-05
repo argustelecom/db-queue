@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
+import java.util.function.Supplier;
 
 /**
  * Queue location in the database.
@@ -14,24 +14,15 @@ import java.util.regex.Pattern;
  */
 public final class QueueLocation {
 
-    /**
-     * Regexp for SQL injection prevention
-     */
-    private static final Pattern DISALLOWED_CHARS = Pattern.compile("[^a-zA-Z0-9_\\.]*");
-
     @Nonnull
-    private final String tableName;
+    private final QueueTable table;
+
     @Nonnull
     private final QueueId queueId;
-    @Nullable
-    private final String idSequence;
 
-    private QueueLocation(@Nonnull QueueId queueId, @Nonnull String tableName,
-                          @Nullable String idSequence) {
+    private QueueLocation(@Nonnull QueueId queueId, @Nonnull QueueTable table) {
         this.queueId = Objects.requireNonNull(queueId, "queueId must not be null");
-        this.tableName = DISALLOWED_CHARS.matcher(
-                Objects.requireNonNull(tableName, "tableName must not be null")).replaceAll("");
-        this.idSequence = idSequence != null ? DISALLOWED_CHARS.matcher(idSequence).replaceAll("") : null;
+        this.table = Objects.requireNonNull(table, "table must not be null");
     }
 
     /**
@@ -41,7 +32,7 @@ public final class QueueLocation {
      */
     @Nonnull
     public String getTableName() {
-        return tableName;
+        return table.getTableName();
     }
 
     /**
@@ -62,15 +53,15 @@ public final class QueueLocation {
      * @return database sequence name for generating primary key of tasks table.
      */
     public Optional<String> getIdSequence() {
-        return Optional.ofNullable(idSequence);
+        return table.getIdSequence();
     }
 
     @Override
     public String toString() {
         return '{' +
-                "id=" + queueId +
-                ",table=" + tableName +
-                (idSequence != null ? ",idSequence=" + idSequence : "") +
+                "id=" + getQueueId() +
+                ",table=" + getTableName() +
+                getIdSequence().map(seq-> ",idSequence=" + seq).orElse("") +
                 '}';
     }
 
@@ -83,14 +74,12 @@ public final class QueueLocation {
             return false;
         }
         QueueLocation that = (QueueLocation) obj;
-        return Objects.equals(tableName, that.tableName) &&
-                Objects.equals(queueId, that.queueId) &&
-                Objects.equals(idSequence, that.idSequence);
+        return Objects.equals(table, that.table) && Objects.equals(queueId, that.queueId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tableName, queueId, idSequence);
+        return Objects.hash(table, queueId);
     }
 
     /**
@@ -102,16 +91,23 @@ public final class QueueLocation {
         return new Builder();
     }
 
+    public static Builder builder(QueueTable.Builder defaultSettings) {
+        return new Builder(defaultSettings);
+    }
+
     /**
      * A builder for class {@link QueueLocation}.
      */
     public static class Builder {
-        private String tableName;
+        private final QueueTable.Builder tableInfoBuilder;
         private QueueId queueId;
-        @Nullable
-        private String idSequence;
 
         private Builder() {
+            tableInfoBuilder = QueueTable.builder();
+        }
+
+        private Builder(@Nonnull QueueTable.Builder defaultSettings) {
+            tableInfoBuilder = Objects.requireNonNull(defaultSettings);
         }
 
         /**
@@ -121,7 +117,7 @@ public final class QueueLocation {
          * @return Reference to the same builder.
          */
         public Builder withTableName(@Nonnull String tableName) {
-            this.tableName = tableName;
+            tableInfoBuilder.withTableName(tableName);
             return this;
         }
 
@@ -143,7 +139,7 @@ public final class QueueLocation {
          * @return Reference to the same builder.
          */
         public Builder withIdSequence(@Nullable String idSequence) {
-            this.idSequence = idSequence;
+            tableInfoBuilder.withIdSequence(idSequence);
             return this;
         }
 
@@ -153,7 +149,7 @@ public final class QueueLocation {
          * @return Queue location  object.
          */
         public QueueLocation build() {
-            return new QueueLocation(queueId, tableName, idSequence);
+            return new QueueLocation(queueId, tableInfoBuilder.build());
         }
     }
 }

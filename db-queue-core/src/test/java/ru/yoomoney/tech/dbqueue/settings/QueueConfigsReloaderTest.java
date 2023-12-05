@@ -43,6 +43,7 @@ public class QueueConfigsReloaderTest {
 
     private QueueConfigsReader createReader(List<Path> paths) {
         return new QueueConfigsReader(paths, "q",
+                QueueTable::builder,
                 () -> ProcessingSettings.builder()
                         .withProcessingMode(ProcessingMode.SEPARATE_TRANSACTIONS),
                 () -> PollSettings.builder()
@@ -52,7 +53,8 @@ public class QueueConfigsReloaderTest {
                 () -> FailureSettings.builder()
                         .withRetryInterval(Duration.ofMinutes(9)).withRetryType(FailRetryType.GEOMETRIC_BACKOFF),
                 () -> ReenqueueSettings.builder()
-                        .withRetryType(ReenqueueRetryType.MANUAL));
+                        .withRetryType(ReenqueueRetryType.MANUAL),
+                ExtSettings::builder);
     }
 
     @Test

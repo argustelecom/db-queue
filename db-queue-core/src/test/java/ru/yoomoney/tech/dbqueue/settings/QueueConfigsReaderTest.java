@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +17,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -49,7 +51,13 @@ public class QueueConfigsReaderTest {
     }
 
     private QueueConfigsReader createReader(List<Path> paths) {
-        return new QueueConfigsReader(paths, "q",
+        return createReader(paths, QueueTable::builder, ExtSettings::builder);
+    }
+
+    private QueueConfigsReader createReader(List<Path> paths, @Nonnull Supplier<QueueTable.Builder> defaultTable,
+            @Nonnull Supplier<ExtSettings.Builder> defaultExtSettings ) {
+        return createReader(paths,
+                defaultTable,
                 () -> ProcessingSettings.builder()
                         .withProcessingMode(ProcessingMode.SEPARATE_TRANSACTIONS).withThreadCount(1),
                 () -> PollSettings.builder()
@@ -59,8 +67,26 @@ public class QueueConfigsReaderTest {
                 () -> FailureSettings.builder()
                         .withRetryInterval(Duration.ofMinutes(9)).withRetryType(FailRetryType.GEOMETRIC_BACKOFF),
                 () -> ReenqueueSettings.builder()
-                        .withRetryType(ReenqueueRetryType.MANUAL));
+                        .withRetryType(ReenqueueRetryType.MANUAL),
+                defaultExtSettings);
     }
+
+    private QueueConfigsReader createReader(List<Path> paths,
+            @Nonnull Supplier<QueueTable.Builder> defaultQueueTable,
+            @Nonnull Supplier<ProcessingSettings.Builder> defaultProcessingSettings,
+            @Nonnull Supplier<PollSettings.Builder> defaultPollSettings,
+            @Nonnull Supplier<FailureSettings.Builder> defaultFailureSettings,
+            @Nonnull Supplier<ReenqueueSettings.Builder> defaultReenqueueSettings,
+            @Nonnull Supplier<ExtSettings.Builder> defaultExtSettings) {
+        return new QueueConfigsReader(paths, "q",
+                defaultQueueTable,
+                defaultProcessingSettings,
+                defaultPollSettings,
+                defaultFailureSettings,
+                defaultReenqueueSettings,
+                defaultExtSettings);
+    }
+
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -97,6 +123,17 @@ public class QueueConfigsReaderTest {
         List<QueueConfig> configs = queueConfigsReader.parse();
         assertThat(configs.get(0).getLocation(), equalTo(QueueLocation.builder().withTableName("foo")
                 .withQueueId(new QueueId("testQueue")).withIdSequence("sequence").build()));
+    }
+
+    @Test
+    public void should_read_simple_config_with_default_table() throws Exception {
+        Path path = write(
+                "q.testQueue.processing-mode=separate-transactions");
+        QueueConfigsReader queueConfigsReader = createReader(Arrays.asList(path),
+                () -> QueueTable.builder().withTableName("default_schema.default_table"), ExtSettings::builder);
+        List<QueueConfig> configs = queueConfigsReader.parse();
+        assertThat(configs.get(0).getLocation(), equalTo(QueueLocation.builder().withTableName("default_schema.default_table")
+                .withQueueId(new QueueId("testQueue")).build()));
     }
 
     @Test

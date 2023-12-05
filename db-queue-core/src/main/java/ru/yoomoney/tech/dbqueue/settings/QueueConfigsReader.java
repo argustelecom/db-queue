@@ -247,6 +247,8 @@ public class QueueConfigsReader {
     @Nonnull
     private final String settingsPrefix;
     @Nonnull
+    private final Supplier<QueueTable.Builder> defaultQueueTable;
+    @Nonnull
     private final Supplier<ProcessingSettings.Builder> defaultProcessingSettings;
     @Nonnull
     private final Supplier<PollSettings.Builder> defaultPollSettings;
@@ -254,6 +256,8 @@ public class QueueConfigsReader {
     private final Supplier<FailureSettings.Builder> defaultFailureSettings;
     @Nonnull
     private final Supplier<ReenqueueSettings.Builder> defaultReenqueueSettings;
+    @Nonnull
+    private final Supplier<ExtSettings.Builder> defaultExtSettings;
 
     /**
      * Constructor
@@ -262,8 +266,8 @@ public class QueueConfigsReader {
      * @param settingsPrefix prefix that will be used for queue settings.
      */
     public QueueConfigsReader(@Nonnull List<Path> configPaths, @Nonnull String settingsPrefix) {
-        this(configPaths, settingsPrefix, ProcessingSettings::builder, PollSettings::builder,
-                FailureSettings::builder, ReenqueueSettings::builder);
+        this(configPaths, settingsPrefix, QueueTable::builder, ProcessingSettings::builder, PollSettings::builder,
+                FailureSettings::builder, ReenqueueSettings::builder, ExtSettings::builder);
     }
 
     /**
@@ -278,16 +282,20 @@ public class QueueConfigsReader {
      */
     public QueueConfigsReader(@Nonnull List<Path> configPaths,
                               @Nonnull String settingsPrefix,
+                              @Nonnull Supplier<QueueTable.Builder> defaultQueueTable,
                               @Nonnull Supplier<ProcessingSettings.Builder> defaultProcessingSettings,
                               @Nonnull Supplier<PollSettings.Builder> defaultPollSettings,
                               @Nonnull Supplier<FailureSettings.Builder> defaultFailureSettings,
-                              @Nonnull Supplier<ReenqueueSettings.Builder> defaultReenqueueSettings) {
+                              @Nonnull Supplier<ReenqueueSettings.Builder> defaultReenqueueSettings,
+                              @Nonnull Supplier<ExtSettings.Builder> defaultExtSettings) {
         this.configPaths = Objects.requireNonNull(configPaths);
         this.settingsPrefix = Objects.requireNonNull(settingsPrefix);
+        this.defaultQueueTable = Objects.requireNonNull(defaultQueueTable);
         this.defaultProcessingSettings = Objects.requireNonNull(defaultProcessingSettings);
         this.defaultPollSettings = Objects.requireNonNull(defaultPollSettings);
         this.defaultFailureSettings = Objects.requireNonNull(defaultFailureSettings);
         this.defaultReenqueueSettings = Objects.requireNonNull(defaultReenqueueSettings);
+        this.defaultExtSettings = Objects.requireNonNull(defaultExtSettings);
         if (configPaths.isEmpty()) {
             throw new IllegalArgumentException("config paths must not be empty");
         }
@@ -325,7 +333,7 @@ public class QueueConfigsReader {
 
         Map<String, Map<String, String>> queues = splitRawSettingsByQueueId(rawSettings);
 
-        QueueLocationParser queueLocationParser = new QueueLocationParser(errorMessages);
+        QueueLocationParser queueLocationParser = new QueueLocationParser(defaultQueueTable, errorMessages);
         ProcessingSettingsParser processingSettingsParser = new ProcessingSettingsParser(defaultProcessingSettings,
                 errorMessages);
         PollSettingsParser pollSettingsParser = new PollSettingsParser(defaultPollSettings,
@@ -334,6 +342,8 @@ public class QueueConfigsReader {
                 errorMessages);
         FailureSettingsParser failureSettingsParser = new FailureSettingsParser(defaultFailureSettings,
                 errorMessages);
+        ExtSettingsParser extSettingsParser = new ExtSettingsParser(defaultExtSettings, errorMessages);
+
 
         List<QueueConfig> queueConfigs = new ArrayList<>();
         queues.forEach((queueId, settings) -> {
@@ -343,6 +353,7 @@ public class QueueConfigsReader {
             Optional<PollSettings> pollSettings = pollSettingsParser.parseSettings(queueId, settings);
             Optional<FailureSettings> failureSettings = failureSettingsParser.parseSettings(queueId, settings);
             Optional<ReenqueueSettings> reenqueueSettings = reenqueueSettingsParser.parseSettings(queueId, settings);
+            ExtSettings extSettings = extSettingsParser.parseExtSettings(settings);
 
             if (queueLocation.isPresent() && processingSettings.isPresent() && pollSettings.isPresent() &&
                     failureSettings.isPresent() && reenqueueSettings.isPresent()) {
@@ -351,7 +362,7 @@ public class QueueConfigsReader {
                         .withPollSettings(pollSettings.get())
                         .withFailureSettings(failureSettings.get())
                         .withReenqueueSettings(reenqueueSettings.get())
-                        .withExtSettings(parseExtSettings(settings)).build();
+                        .withExtSettings(extSettings).build();
                 queueConfigs.add(new QueueConfig(queueLocation.get(), queueSettings));
             }
         });
@@ -393,19 +404,6 @@ public class QueueConfigsReader {
         checkErrors();
         return result;
     }
-
-    @Nonnull
-    private static ExtSettings parseExtSettings(Map<String, String> settings) {
-        String extSettingsPrefix = SETTING_ADDITIONAL + '.';
-        Map<String, String> map = new LinkedHashMap<>();
-        for (Map.Entry<String, String> property : settings.entrySet()) {
-            if (property.getKey().startsWith(extSettingsPrefix)) {
-                map.put(property.getKey().substring(extSettingsPrefix.length()), property.getValue());
-            }
-        }
-        return ExtSettings.builder().withSettings(map).build();
-    }
-
 
     private void checkErrors() {
         if (!errorMessages.isEmpty()) {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static ru.yoomoney.tech.dbqueue.settings.QueueConfigsReader.SETTING_ID_SEQUENCE;
 import static ru.yoomoney.tech.dbqueue.settings.QueueConfigsReader.SETTING_TABLE;
@@ -18,13 +19,16 @@ import static ru.yoomoney.tech.dbqueue.settings.QueueConfigsReader.SETTING_TABLE
 class QueueLocationParser {
 
     private final List<String> errorMessages;
+    private final Supplier<QueueTable.Builder> defaultSettings;
 
     /**
      * Constructor
      *
      * @param errorMessages list of error messages
      */
-    QueueLocationParser(@Nonnull List<String> errorMessages) {
+    QueueLocationParser(@Nonnull Supplier<QueueTable.Builder> defaultSettings,
+                        @Nonnull List<String> errorMessages) {
+        this.defaultSettings = Objects.requireNonNull(defaultSettings, "defaultSettings");
         this.errorMessages = Objects.requireNonNull(errorMessages, "errorMessages");
     }
 
@@ -39,7 +43,7 @@ class QueueLocationParser {
         Objects.requireNonNull(queueId, "queueId");
         Objects.requireNonNull(settings, "settings");
         try {
-            QueueLocation.Builder queueLocation = QueueLocation.builder();
+            QueueLocation.Builder queueLocation = QueueLocation.builder(defaultSettings.get());
             queueLocation.withQueueId(new QueueId(queueId));
             settings.forEach((key, value) -> fillSettings(queueLocation, key, value));
             return Optional.of(queueLocation.build());

@@ -6,6 +6,7 @@ dependencies {
 
 
     testCompile project(':db-queue-core'),
+            project(':db-queue-jdbc'),
             project(':db-queue-spring'),
             project(':db-queue-brave'),
 

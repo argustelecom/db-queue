@@ -36,7 +36,7 @@ import ru.yoomoney.tech.dbqueue.settings.QueueLocation;
 import ru.yoomoney.tech.dbqueue.settings.QueueSettings;
 import ru.yoomoney.tech.dbqueue.settings.ReenqueueRetryType;
 import ru.yoomoney.tech.dbqueue.settings.ReenqueueSettings;
-import ru.yoomoney.tech.dbqueue.spring.dao.SpringDatabaseAccessLayer;
+import ru.yoomoney.tech.dbqueue.dao.spring.SpringDatabaseAccessLayer;
 
 import java.time.Duration;
 import java.util.Arrays;

@@ -1,5 +1,8 @@
 ### NEXT_VERSION_TYPE=MAJOR|MINOR|PATCH
 ### NEXT_VERSION_DESCRIPTION_BEGIN
+* Generic DAO implementation moved from db-queue-spring to new module db-queue-jdbc
+    * db-queue-jdbc may be used without spring. You need to implement interface JdbcOperationsSubset
+    * Spring specific remains in db-queue-spring. Contains JdbcOperationsSubset and SpringDatabaseAccessLayer
 ### NEXT_VERSION_DESCRIPTION_END
 ## [15.1.0]() (17-03-2022)
 

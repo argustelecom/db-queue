@@ -230,6 +230,7 @@ The library is divided into several modules. Each module contains minimal set of
 project.
 
 * `db-queue-core` module provides base logic and requires `org.slf4j:slf4j-api` library
+* `db-queue-jdbc` module provides generic DAO implementation you can use to build your own DAO
 * `db-queue-spring` module provides access to database and requires Spring Framework: spring-jdbc and spring-tx. Other
   features of Spring ecosystem are not in use.
 * `db-queue-brave` module provides tracing support with help of [Brave](https://github.com/openzipkin/brave)
@@ -260,3 +261,7 @@ Registration and configuration.
 Internal classes. **Not for public use**.
 
 *Backward compatibility for classes in that package maybe broken in any release*
+
+## How to release
+
+В changelog.md описать изменения между ### NEXT_VERSION_DESCRIPTION_BEGIN и ### NEXT_VERSION_DESCRIPTION_END

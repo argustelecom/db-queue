@@ -1,5 +1,7 @@
 package ru.yoomoney.tech.dbqueue.settings;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.List;
@@ -23,6 +25,7 @@ import static ru.yoomoney.tech.dbqueue.settings.QueueConfigsReader.VALUE_TASK_RE
 class FailureSettingsParser {
 
     private final Supplier<FailureSettings.Builder> defaultSettings;
+    @SuppressFBWarnings("WOC_WRITE_ONLY_COLLECTION_FIELD")
     private final List<String> errorMessages;
 
     /**

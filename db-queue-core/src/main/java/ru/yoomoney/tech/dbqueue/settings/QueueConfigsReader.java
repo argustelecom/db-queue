@@ -342,7 +342,7 @@ public class QueueConfigsReader {
                 errorMessages);
         FailureSettingsParser failureSettingsParser = new FailureSettingsParser(defaultFailureSettings,
                 errorMessages);
-        ExtSettingsParser extSettingsParser = new ExtSettingsParser(defaultExtSettings, errorMessages);
+        ExtSettingsParser extSettingsParser = new ExtSettingsParser(defaultExtSettings);
 
 
         List<QueueConfig> queueConfigs = new ArrayList<>();

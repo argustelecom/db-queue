@@ -11,7 +11,6 @@ import java.util.function.Supplier;
  */
 public class ExtSettingsParser {
     private final Supplier<ExtSettings.Builder> defaultSettings;
-    private final List<String> errorMessages;
 
     /**
      * Constructor
@@ -19,10 +18,8 @@ public class ExtSettingsParser {
      * @param defaultSettings default settings
      * @param errorMessages   list of error messages
      */
-    ExtSettingsParser(@Nonnull Supplier<ExtSettings.Builder> defaultSettings,
-            @Nonnull List<String> errorMessages) {
+    ExtSettingsParser(@Nonnull Supplier<ExtSettings.Builder> defaultSettings) {
         this.defaultSettings = Objects.requireNonNull(defaultSettings, "defaultSettings");
-        this.errorMessages = Objects.requireNonNull(errorMessages, "errorMessages");
     }
 
     /**

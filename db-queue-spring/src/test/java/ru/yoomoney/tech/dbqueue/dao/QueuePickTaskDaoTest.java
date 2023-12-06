@@ -47,7 +47,7 @@ public abstract class QueuePickTaskDaoTest {
     /**
      * Some glitches with Windows
      */
-    private static final Duration WINDOWS_OS_DELAY = Duration.ofSeconds(2);
+    private static final Duration WINDOWS_OS_DELAY = Duration.ofSeconds(4);
 
     public QueuePickTaskDaoTest(QueueDao queueDao,
                                 BiFunction<QueueLocation, FailureSettings, QueuePickTaskDao> pickTaskDaoFactory,

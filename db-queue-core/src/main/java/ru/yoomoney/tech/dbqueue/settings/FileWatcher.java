@@ -118,6 +118,7 @@ class FileWatcher {
         } catch (InterruptedException exc) {
             Thread.currentThread().interrupt();
         } catch (ClosedWatchServiceException ignored) {
+            // ignore
         }
     }
 }

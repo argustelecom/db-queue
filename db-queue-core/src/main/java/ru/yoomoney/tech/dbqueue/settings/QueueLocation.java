@@ -61,7 +61,7 @@ public final class QueueLocation {
         return '{' +
                 "id=" + getQueueId() +
                 ",table=" + getTableName() +
-                getIdSequence().map(seq-> ",idSequence=" + seq).orElse("") +
+                getIdSequence().map(seq -> ",idSequence=" + seq).orElse("") +
                 '}';
     }
 

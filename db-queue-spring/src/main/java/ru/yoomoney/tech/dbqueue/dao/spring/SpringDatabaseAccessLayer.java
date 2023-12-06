@@ -106,7 +106,8 @@ public class SpringDatabaseAccessLayer implements DatabaseAccessLayer {
             case ORACLE_11G:
                 return new Oracle11QueuePickTaskDao(jdbcOperations, queueTableSchema, queueLocation, failureSettings);
             case H2:
-                return new H2QueuePickTaskDao(jdbcOperations.getDelegate().getJdbcOperations(), queueTableSchema, queueLocation, failureSettings);
+                return new H2QueuePickTaskDao(jdbcOperations.getDelegate().getJdbcOperations(), queueTableSchema,
+                        queueLocation, failureSettings);
             default:
                 throw new IllegalArgumentException("unsupported database kind: " + databaseDialect);
         }
